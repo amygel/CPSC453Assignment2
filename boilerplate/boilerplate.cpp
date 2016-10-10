@@ -44,6 +44,9 @@ string LoadSource(const string &filename);
 GLuint CompileShader(GLenum shaderType, const string &source);
 GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
+static int currImageNum_ = 0;
+static string currImageFileName_ = "images/image1-mandrill.png";
+
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
 
@@ -324,11 +327,95 @@ void ErrorCallback(int error, const char* description)
    cout << description << endl;
 }
 
+int increaseCountWithinRange(int counter, int range)
+{
+   counter++;
+   if (counter == range)
+   {
+      counter = 0;
+   }
+   return counter;
+}
+
+int decreaseCountWithinRange(int counter, int maxValue)
+{
+   counter--;
+   if (counter == -1)
+   {
+      counter = maxValue;
+   }
+   return counter;
+}
+
+void moveToNextImage()
+{
+   switch (currImageNum_)
+   {
+   case 0:
+      currImageFileName_ = "images/image2-uclogo.png";
+      break;
+   case 1:
+      currImageFileName_ = "images/image3-aerial.jpg";
+      break;
+   case 2:
+      currImageFileName_ = "images/image4-thirsk.jpg";
+      break;
+   case 3:
+      currImageFileName_ = "images/image5-pattern.png";
+      break;
+   case 4:
+      currImageFileName_ = "images/image6-edc2016.jpg";
+      break;
+   case 5:
+   default:
+      currImageFileName_ = "images/image1-mandrill.png";
+      break;
+   };
+}
+
+void moveToPreviousImage()
+{
+   switch (currImageNum_)
+   {
+   case 0:
+      currImageFileName_ = "images/image6-edc2016.jpg";
+      break;
+   case 1:
+   default:
+      currImageFileName_ = "images/image1-mandrill.png";
+      break;
+   case 2:
+      currImageFileName_ = "images/image2-uclogo.png";
+      break;
+   case 3:
+      currImageFileName_ = "images/image3-aerial.jpg";
+      break;
+   case 4:
+      currImageFileName_ = "images/image4-thirsk.jpg";
+      break;
+   case 5:
+      currImageFileName_ = "images/image5-pattern.png";
+      break;
+   };
+}
+
 // handles keyboard input events
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+   {
       glfwSetWindowShouldClose(window, GL_TRUE);
+   }
+   else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+   {
+      moveToNextImage();
+      currImageNum_ =increaseCountWithinRange(currImageNum_, 6);
+   }
+   else if (key == GLFW_KEY_LEFT  && action == GLFW_PRESS)
+   {
+      moveToPreviousImage();
+      currImageNum_ =decreaseCountWithinRange(currImageNum_, 5);
+   }
 }
 
 // ==========================================================================
@@ -378,17 +465,18 @@ int main(int argc, char *argv[])
    }
 
    MyTexture texture;
-   if (!InitializeTexture(&texture, "images/image6-edc2016.jpg", GL_TEXTURE_RECTANGLE))
-      cout << "Program failed to initialize texture!" << endl;
-
-   // call function to create and fill buffers with geometry data
    MyGeometry geometry;
-   if (!InitializeGeometry(&geometry, &texture))
-      cout << "Program failed to initialize geometry!" << endl;
 
    // run an event-triggered main loop
    while (!glfwWindowShouldClose(window))
    {
+      if (!InitializeTexture(&texture, currImageFileName_.c_str(), GL_TEXTURE_RECTANGLE))
+         cout << "Program failed to initialize texture!" << endl;
+
+      // call function to create and fill buffers with geometry data
+      if (!InitializeGeometry(&geometry, &texture))
+         cout << "Program failed to initialize geometry!" << endl;
+
       // call function to draw our scene
       RenderScene(&geometry, &texture, &shader); //render scene with texture
 
