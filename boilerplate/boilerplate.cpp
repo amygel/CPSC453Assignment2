@@ -48,43 +48,43 @@ GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
 struct MyShader
 {
-	// OpenGL names for vertex and fragment shaders, shader program
-	GLuint  vertex;
-	GLuint  fragment;
-	GLuint  program;
+   // OpenGL names for vertex and fragment shaders, shader program
+   GLuint  vertex;
+   GLuint  fragment;
+   GLuint  program;
 
-	// initialize shader and program names to zero (OpenGL reserved value)
-	MyShader() : vertex(0), fragment(0), program(0)
-	{}
+   // initialize shader and program names to zero (OpenGL reserved value)
+   MyShader() : vertex(0), fragment(0), program(0)
+   {}
 };
 
 // load, compile, and link shaders, returning true if successful
 bool InitializeShaders(MyShader *shader)
 {
-	// load shader source from files
-	string vertexSource = LoadSource("vertex.glsl");
-	string fragmentSource = LoadSource("fragment.glsl");
-	if (vertexSource.empty() || fragmentSource.empty()) return false;
+   // load shader source from files
+   string vertexSource = LoadSource("vertex.glsl");
+   string fragmentSource = LoadSource("fragment.glsl");
+   if (vertexSource.empty() || fragmentSource.empty()) return false;
 
-	// compile shader source into shader objects
-	shader->vertex = CompileShader(GL_VERTEX_SHADER, vertexSource);
-	shader->fragment = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+   // compile shader source into shader objects
+   shader->vertex = CompileShader(GL_VERTEX_SHADER, vertexSource);
+   shader->fragment = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
-	// link shader program
-	shader->program = LinkProgram(shader->vertex, shader->fragment);
+   // link shader program
+   shader->program = LinkProgram(shader->vertex, shader->fragment);
 
-	// check for OpenGL errors and return false if error occurred
-	return !CheckGLErrors();
+   // check for OpenGL errors and return false if error occurred
+   return !CheckGLErrors();
 }
 
 // deallocate shader-related objects
 void DestroyShaders(MyShader *shader)
 {
-	// unbind any shader programs and destroy shader objects
-	glUseProgram(0);
-	glDeleteProgram(shader->program);
-	glDeleteShader(shader->vertex);
-	glDeleteShader(shader->fragment);
+   // unbind any shader programs and destroy shader objects
+   glUseProgram(0);
+   glDeleteProgram(shader->program);
+   glDeleteShader(shader->vertex);
+   glDeleteShader(shader->fragment);
 }
 
 // --------------------------------------------------------------------------
@@ -92,55 +92,56 @@ void DestroyShaders(MyShader *shader)
 
 struct MyTexture
 {
-	GLuint textureID;
-	GLuint target;
-	int width;
-	int height;
+   GLuint textureID;
+   GLuint target;
+   int width;
+   int height;
 
-	// initialize object names to zero (OpenGL reserved value)
-	MyTexture() : textureID(0), target(0), width(0), height(0)
-	{}
+   // initialize object names to zero (OpenGL reserved value)
+   MyTexture() : textureID(0), target(0), width(0), height(0)
+   {}
 };
 
 bool InitializeTexture(MyTexture* texture, const char* filename, GLuint target = GL_TEXTURE_2D)
 {
-	int numComponents;
-	stbi_set_flip_vertically_on_load(true);
-	unsigned char *data = stbi_load(filename, &texture->width, &texture->height, &numComponents, 0);
-	if (data != nullptr)
-	{
-		texture->target = target;
-		glGenTextures(1, &texture->textureID);
-		glBindTexture(texture->target, texture->textureID);
-		GLuint format = numComponents == 3 ? GL_RGB : GL_RGBA;
-		glTexImage2D(texture->target, 0, format, texture->width, texture->height, 0, format, GL_UNSIGNED_BYTE, data);
+   int numComponents;
+   stbi_set_flip_vertically_on_load(true);
+   unsigned char *data = stbi_load(filename, &texture->width, &texture->height, &numComponents, 0);
+   if (data != nullptr)
+   {
+      texture->target = target;
+      glEnable(texture->target);
+      glGenTextures(1, &texture->textureID);
+      glBindTexture(texture->target, texture->textureID);
+      GLuint format = numComponents == 3 ? GL_RGB : GL_RGBA;
+      glTexImage2D(texture->target, 0, format, texture->width, texture->height, 0, format, GL_UNSIGNED_BYTE, data);
 
-		// Note: Only wrapping modes supported for GL_TEXTURE_RECTANGLE when defining
-		// GL_TEXTURE_WRAP are GL_CLAMP_TO_EDGE or GL_CLAMP_TO_BORDER
-		glTexParameteri(texture->target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(texture->target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(texture->target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(texture->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      // Note: Only wrapping modes supported for GL_TEXTURE_RECTANGLE when defining
+      // GL_TEXTURE_WRAP are GL_CLAMP_TO_EDGE or GL_CLAMP_TO_BORDER
+      glTexParameteri(texture->target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(texture->target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(texture->target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(texture->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		// Clean up
-		glBindTexture(texture->target, 0);
-		stbi_image_free(data);
-		return !CheckGLErrors();
-	}
-	return true; //error
+      // Clean up
+      glBindTexture(texture->target, 0);
+      stbi_image_free(data);
+      return !CheckGLErrors();
+   }
+   return true; //error
 }
 
 // deallocate texture-related objects
 void DestroyTexture(MyTexture *texture)
 {
-	glBindTexture(texture->target, 0);
-	glDeleteTextures(1, &texture->textureID);
+   glBindTexture(texture->target, 0);
+   glDeleteTextures(1, &texture->textureID);
 }
 
 void SaveImage(const char* filename, int width, int height, unsigned char *data, int numComponents = 3, int stride = 0)
 {
-	if (!stbi_write_png(filename, width, height, numComponents, data, stride))
-		cout << "Unable to save image: " << filename << endl;
+   if (!stbi_write_png(filename, width, height, numComponents, data, stride))
+      cout << "Unable to save image: " << filename << endl;
 }
 
 // --------------------------------------------------------------------------
@@ -148,103 +149,123 @@ void SaveImage(const char* filename, int width, int height, unsigned char *data,
 
 struct MyGeometry
 {
-	// OpenGL names for array buffer objects, vertex array object
-	GLuint  vertexBuffer;
-	GLuint  textureBuffer;
-	GLuint  colourBuffer;
-	GLuint  vertexArray;
-	GLsizei elementCount;
+   // OpenGL names for array buffer objects, vertex array object
+   GLuint  vertexBuffer;
+   GLuint  textureBuffer;
+   GLuint  colourBuffer;
+   GLuint  vertexArray;
+   GLsizei elementCount;
 
-	// initialize object names to zero (OpenGL reserved value)
-	MyGeometry() : vertexBuffer(0), colourBuffer(0), vertexArray(0), elementCount(0)
-	{}
+   // initialize object names to zero (OpenGL reserved value)
+   MyGeometry() : vertexBuffer(0), colourBuffer(0), vertexArray(0), elementCount(0)
+   {}
 };
 
 // create buffers and fill with geometry data, returning true if successful
 bool InitializeGeometry(MyGeometry *geometry)
 {
-	// three vertex positions and assocated colours of a triangle
-	const GLfloat vertices[][2] = {
-		{ -.6f, -.4f },
-		{ .0f, .6f },
-		{ .6f, -.4f }
-	};
+   // three vertex positions and associated colours of a triangle
+   const GLfloat vertices[][2] = {
+      { -.6f, -.4f },
+      { .0f, .6f },
+      { .6f, -.4f }
+   };
 
-	const GLfloat colours[][3] = {
-		{ 1.0f, 0.0f, 0.0f },
-		{ 0.0f, 1.0f, 0.0f },
-		{ 0.0f, 0.0f, 1.0f }
-	};
-	geometry->elementCount = 3;
+   const GLfloat colours[][3] = {
+      { 1.0f, 0.0f, 0.0f },
+      { 0.0f, 1.0f, 0.0f },
+      { 0.0f, 0.0f, 1.0f }
+   };
 
-	// these vertex attribute indices correspond to those specified for the
-	// input variables in the vertex shader
-	const GLuint VERTEX_INDEX = 0;
-	const GLuint COLOUR_INDEX = 1;
+   const GLfloat textures[][2] = {
+      { 0.0f, 0.0f },
+      { 256.0f, 512.0f },
+      { 512.0f, 0.0f }
+   };
+   geometry->elementCount = 3;
 
-	// create an array buffer object for storing our vertices
-	glGenBuffers(1, &geometry->vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, geometry->vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+   // these vertex attribute indices correspond to those specified for the
+   // input variables in the vertex shader
+   const GLuint VERTEX_INDEX = 0;
+   const GLuint COLOUR_INDEX = 1;
+   const GLuint TEXTURE_INDEX = 2;
 
-	// create another one for storing our colours
-	glGenBuffers(1, &geometry->colourBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, geometry->colourBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colours), colours, GL_STATIC_DRAW);
+   // create an array buffer object for storing our vertices
+   glGenBuffers(1, &geometry->vertexBuffer);
+   glBindBuffer(GL_ARRAY_BUFFER, geometry->vertexBuffer);
+   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	// create a vertex array object encapsulating all our vertex attributes
-	glGenVertexArrays(1, &geometry->vertexArray);
-	glBindVertexArray(geometry->vertexArray);
+   // create an array buffer object for storing our textures
+   glGenBuffers(1, &geometry->textureBuffer);
+   glBindBuffer(GL_ARRAY_BUFFER, geometry->textureBuffer);
+   glBufferData(GL_ARRAY_BUFFER, sizeof(textures), textures, GL_STATIC_DRAW);
 
-	// associate the position array with the vertex array object
-	glBindBuffer(GL_ARRAY_BUFFER, geometry->vertexBuffer);
-	glVertexAttribPointer(VERTEX_INDEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(VERTEX_INDEX);
+   // create another one for storing our colours
+   glGenBuffers(1, &geometry->colourBuffer);
+   glBindBuffer(GL_ARRAY_BUFFER, geometry->colourBuffer);
+   glBufferData(GL_ARRAY_BUFFER, sizeof(colours), colours, GL_STATIC_DRAW);
 
-	// assocaite the colour array with the vertex array object
-	glBindBuffer(GL_ARRAY_BUFFER, geometry->colourBuffer);
-	glVertexAttribPointer(COLOUR_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(COLOUR_INDEX);
+   // create a vertex array object encapsulating all our vertex attributes
+   glGenVertexArrays(1, &geometry->vertexArray);
+   glBindVertexArray(geometry->vertexArray);
 
-	// unbind our buffers, resetting to default state
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+   // associate the position array with the vertex array object
+   glBindBuffer(GL_ARRAY_BUFFER, geometry->vertexBuffer);
+   glVertexAttribPointer(VERTEX_INDEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(VERTEX_INDEX);
 
-	// check for OpenGL errors and return false if error occurred
-	return !CheckGLErrors();
+   // associate the texture array with the vertex array object
+   glBindBuffer(GL_ARRAY_BUFFER, geometry->textureBuffer);
+   glVertexAttribPointer(TEXTURE_INDEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(TEXTURE_INDEX);
+
+   // assocaite the colour array with the vertex array object
+   glBindBuffer(GL_ARRAY_BUFFER, geometry->colourBuffer);
+   glVertexAttribPointer(COLOUR_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
+   glEnableVertexAttribArray(COLOUR_INDEX);
+
+   // unbind our buffers, resetting to default state
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+   glBindVertexArray(0);
+
+   // check for OpenGL errors and return false if error occurred
+   return !CheckGLErrors();
 }
 
 // deallocate geometry-related objects
 void DestroyGeometry(MyGeometry *geometry)
 {
-	// unbind and destroy our vertex array object and associated buffers
-	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &geometry->vertexArray);
-	glDeleteBuffers(1, &geometry->vertexBuffer);
-	glDeleteBuffers(1, &geometry->colourBuffer);
+   // unbind and destroy our vertex array object and associated buffers
+   glBindVertexArray(0);
+   glDeleteVertexArrays(1, &geometry->vertexArray);
+   glDeleteBuffers(1, &geometry->vertexBuffer);
+   glDeleteBuffers(1, &geometry->colourBuffer);
+   glDeleteBuffers(1, &geometry->textureBuffer);
 }
 
 // --------------------------------------------------------------------------
 // Rendering function that draws our scene to the frame buffer
 
-void RenderScene(MyGeometry *geometry, MyShader *shader)
+void RenderScene(MyGeometry *geometry, MyTexture* texture, MyShader *shader)
 {
-	// clear screen to a dark grey colour
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+   // clear screen to a dark grey colour
+   glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+   glClear(GL_COLOR_BUFFER_BIT);
 
-	// bind our shader program and the vertex array object containing our
-	// scene geometry, then tell OpenGL to draw our geometry
-	glUseProgram(shader->program);
-	glBindVertexArray(geometry->vertexArray);
-	glDrawArrays(GL_TRIANGLES, 0, geometry->elementCount);
+   // bind our shader program and the vertex array object containing our
+   // scene geometry, then tell OpenGL to draw our geometry
+   glUseProgram(shader->program);
+   glBindVertexArray(geometry->vertexArray);
+   glBindTexture(texture->target, texture->textureID);
+   glDrawArrays(GL_TRIANGLES, 0, geometry->elementCount);
 
-	// reset state to default (no shader or geometry bound)
-	glBindVertexArray(0);
-	glUseProgram(0);
+   // reset state to default (no shader or geometry bound)
+   glBindTexture(texture->target, 0);
+   glBindVertexArray(0);
+   glUseProgram(0);
 
-	// check for an report any OpenGL errors
-	CheckGLErrors();
+   // check for an report any OpenGL errors
+   CheckGLErrors();
 }
 
 // --------------------------------------------------------------------------
@@ -253,15 +274,15 @@ void RenderScene(MyGeometry *geometry, MyShader *shader)
 // reports GLFW errors
 void ErrorCallback(int error, const char* description)
 {
-	cout << "GLFW ERROR " << error << ":" << endl;
-	cout << description << endl;
+   cout << "GLFW ERROR " << error << ":" << endl;
+   cout << description << endl;
 }
 
 // handles keyboard input events
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
+   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+      glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
 // ==========================================================================
@@ -269,71 +290,76 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
 int main(int argc, char *argv[])
 {
-	// initialize the GLFW windowing system
-	if (!glfwInit()) {
-		cout << "ERROR: GLFW failed to initialize, TERMINATING" << endl;
-		return -1;
-	}
-	glfwSetErrorCallback(ErrorCallback);
+   // initialize the GLFW windowing system
+   if (!glfwInit()) {
+      cout << "ERROR: GLFW failed to initialize, TERMINATING" << endl;
+      return -1;
+   }
+   glfwSetErrorCallback(ErrorCallback);
 
-	// attempt to create a window with an OpenGL 4.1 core profile context
-	GLFWwindow *window = 0;
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	window = glfwCreateWindow(512, 512, "CPSC 453 OpenGL Boilerplate", 0, 0);
-	if (!window) {
-		cout << "Program failed to create GLFW window, TERMINATING" << endl;
-		glfwTerminate();
-		return -1;
-	}
+   // attempt to create a window with an OpenGL 4.1 core profile context
+   GLFWwindow *window = 0;
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+   window = glfwCreateWindow(512, 512, "CPSC 453 OpenGL Boilerplate", 0, 0);
+   if (!window) {
+      cout << "Program failed to create GLFW window, TERMINATING" << endl;
+      glfwTerminate();
+      return -1;
+   }
 
-	// set keyboard callback function and make our context current (active)
-	glfwSetKeyCallback(window, KeyCallback);
-	glfwMakeContextCurrent(window);
+   // set keyboard callback function and make our context current (active)
+   glfwSetKeyCallback(window, KeyCallback);
+   glfwMakeContextCurrent(window);
 
-	//Intialize GLAD
-	if (!gladLoadGL())
-	{
-		cout << "GLAD init failed" << endl;
-		return -1;
-	}
+   //Intialize GLAD
+   if (!gladLoadGL())
+   {
+      cout << "GLAD init failed" << endl;
+      return -1;
+   }
 
-	// query and print out information about our OpenGL environment
-	QueryGLVersion();
+   // query and print out information about our OpenGL environment
+   QueryGLVersion();
 
-	// call function to load and compile shader programs
-	MyShader shader;
-	if (!InitializeShaders(&shader)) {
-		cout << "Program could not initialize shaders, TERMINATING" << endl;
-		return -1;
-	}
+   // call function to load and compile shader programs
+   MyShader shader;
+   if (!InitializeShaders(&shader)) {
+      cout << "Program could not initialize shaders, TERMINATING" << endl;
+      return -1;
+   }
 
-	// call function to create and fill buffers with geometry data
-	MyGeometry geometry;
-	if (!InitializeGeometry(&geometry))
-		cout << "Program failed to intialize geometry!" << endl;
+   // call function to create and fill buffers with geometry data
+   MyGeometry geometry;
+   if (!InitializeGeometry(&geometry))
+      cout << "Program failed to initialize geometry!" << endl;
 
-	// run an event-triggered main loop
-	while (!glfwWindowShouldClose(window))
-	{
-		// call function to draw our scene
-		RenderScene(&geometry, &shader); //render scene with texture
+   MyTexture texture;
+   if (!InitializeTexture(&texture, "images/image1-mandrill.png", GL_TEXTURE_RECTANGLE))
+      cout << "Program failed to initialize texture!" << endl;
 
-		glfwSwapBuffers(window);
+   // run an event-triggered main loop
+   while (!glfwWindowShouldClose(window))
+   {
+      // call function to draw our scene
+      RenderScene(&geometry, &texture, &shader); //render scene with texture
 
-		glfwPollEvents();
-	}
+      glfwSwapBuffers(window);
 
-	// clean up allocated resources before exit
-	DestroyGeometry(&geometry);
-	DestroyShaders(&shader);
-	glfwDestroyWindow(window);
-	glfwTerminate();
+      glfwPollEvents();
+   }
 
-	cout << "Goodbye!" << endl;
-	return 0;
+   // clean up allocated resources before exit
+   DestroyTexture(&texture);
+   DestroyGeometry(&geometry);
+   DestroyShaders(&shader);
+   glfwDestroyWindow(window);
+   glfwTerminate();
+
+   cout << "Goodbye!" << endl;
+   return 0;
 }
 
 // ==========================================================================
@@ -344,39 +370,39 @@ int main(int argc, char *argv[])
 
 void QueryGLVersion()
 {
-	// query opengl version and renderer information
-	string version = reinterpret_cast<const char *>(glGetString(GL_VERSION));
-	string glslver = reinterpret_cast<const char *>(glGetString(GL_SHADING_LANGUAGE_VERSION));
-	string renderer = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+   // query opengl version and renderer information
+   string version = reinterpret_cast<const char *>(glGetString(GL_VERSION));
+   string glslver = reinterpret_cast<const char *>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+   string renderer = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
 
-	cout << "OpenGL [ " << version << " ] "
-		<< "with GLSL [ " << glslver << " ] "
-		<< "on renderer [ " << renderer << " ]" << endl;
+   cout << "OpenGL [ " << version << " ] "
+      << "with GLSL [ " << glslver << " ] "
+      << "on renderer [ " << renderer << " ]" << endl;
 }
 
 bool CheckGLErrors()
 {
-	bool error = false;
-	for (GLenum flag = glGetError(); flag != GL_NO_ERROR; flag = glGetError())
-	{
-		cout << "OpenGL ERROR:  ";
-		switch (flag) {
-		case GL_INVALID_ENUM:
-			cout << "GL_INVALID_ENUM" << endl; break;
-		case GL_INVALID_VALUE:
-			cout << "GL_INVALID_VALUE" << endl; break;
-		case GL_INVALID_OPERATION:
-			cout << "GL_INVALID_OPERATION" << endl; break;
-		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			cout << "GL_INVALID_FRAMEBUFFER_OPERATION" << endl; break;
-		case GL_OUT_OF_MEMORY:
-			cout << "GL_OUT_OF_MEMORY" << endl; break;
-		default:
-			cout << "[unknown error code]" << endl;
-		}
-		error = true;
-	}
-	return error;
+   bool error = false;
+   for (GLenum flag = glGetError(); flag != GL_NO_ERROR; flag = glGetError())
+   {
+      cout << "OpenGL ERROR:  ";
+      switch (flag) {
+      case GL_INVALID_ENUM:
+         cout << "GL_INVALID_ENUM" << endl; break;
+      case GL_INVALID_VALUE:
+         cout << "GL_INVALID_VALUE" << endl; break;
+      case GL_INVALID_OPERATION:
+         cout << "GL_INVALID_OPERATION" << endl; break;
+      case GL_INVALID_FRAMEBUFFER_OPERATION:
+         cout << "GL_INVALID_FRAMEBUFFER_OPERATION" << endl; break;
+      case GL_OUT_OF_MEMORY:
+         cout << "GL_OUT_OF_MEMORY" << endl; break;
+      default:
+         cout << "[unknown error code]" << endl;
+      }
+      error = true;
+   }
+   return error;
 }
 
 // --------------------------------------------------------------------------
@@ -385,76 +411,76 @@ bool CheckGLErrors()
 // reads a text file with the given name into a string
 string LoadSource(const string &filename)
 {
-	string source;
+   string source;
 
-	ifstream input(filename.c_str());
-	if (input) {
-		copy(istreambuf_iterator<char>(input),
-			istreambuf_iterator<char>(),
-			back_inserter(source));
-		input.close();
-	}
-	else {
-		cout << "ERROR: Could not load shader source from file "
-			<< filename << endl;
-	}
+   ifstream input(filename.c_str());
+   if (input) {
+      copy(istreambuf_iterator<char>(input),
+         istreambuf_iterator<char>(),
+         back_inserter(source));
+      input.close();
+   }
+   else {
+      cout << "ERROR: Could not load shader source from file "
+         << filename << endl;
+   }
 
-	return source;
+   return source;
 }
 
 // creates and returns a shader object compiled from the given source
 GLuint CompileShader(GLenum shaderType, const string &source)
 {
-	// allocate shader object name
-	GLuint shaderObject = glCreateShader(shaderType);
+   // allocate shader object name
+   GLuint shaderObject = glCreateShader(shaderType);
 
-	// try compiling the source as a shader of the given type
-	const GLchar *source_ptr = source.c_str();
-	glShaderSource(shaderObject, 1, &source_ptr, 0);
-	glCompileShader(shaderObject);
+   // try compiling the source as a shader of the given type
+   const GLchar *source_ptr = source.c_str();
+   glShaderSource(shaderObject, 1, &source_ptr, 0);
+   glCompileShader(shaderObject);
 
-	// retrieve compile status
-	GLint status;
-	glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &status);
-	if (status == GL_FALSE)
-	{
-		GLint length;
-		glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &length);
-		string info(length, ' ');
-		glGetShaderInfoLog(shaderObject, info.length(), &length, &info[0]);
-		cout << "ERROR compiling shader:" << endl << endl;
-		cout << source << endl;
-		cout << info << endl;
-	}
+   // retrieve compile status
+   GLint status;
+   glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &status);
+   if (status == GL_FALSE)
+   {
+      GLint length;
+      glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &length);
+      string info(length, ' ');
+      glGetShaderInfoLog(shaderObject, info.length(), &length, &info[0]);
+      cout << "ERROR compiling shader:" << endl << endl;
+      cout << source << endl;
+      cout << info << endl;
+   }
 
-	return shaderObject;
+   return shaderObject;
 }
 
 // creates and returns a program object linked from vertex and fragment shaders
 GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader)
 {
-	// allocate program object name
-	GLuint programObject = glCreateProgram();
+   // allocate program object name
+   GLuint programObject = glCreateProgram();
 
-	// attach provided shader objects to this program
-	if (vertexShader)   glAttachShader(programObject, vertexShader);
-	if (fragmentShader) glAttachShader(programObject, fragmentShader);
+   // attach provided shader objects to this program
+   if (vertexShader)   glAttachShader(programObject, vertexShader);
+   if (fragmentShader) glAttachShader(programObject, fragmentShader);
 
-	// try linking the program with given attachments
-	glLinkProgram(programObject);
+   // try linking the program with given attachments
+   glLinkProgram(programObject);
 
-	// retrieve link status
-	GLint status;
-	glGetProgramiv(programObject, GL_LINK_STATUS, &status);
-	if (status == GL_FALSE)
-	{
-		GLint length;
-		glGetProgramiv(programObject, GL_INFO_LOG_LENGTH, &length);
-		string info(length, ' ');
-		glGetProgramInfoLog(programObject, info.length(), &length, &info[0]);
-		cout << "ERROR linking shader program:" << endl;
-		cout << info << endl;
-	}
+   // retrieve link status
+   GLint status;
+   glGetProgramiv(programObject, GL_LINK_STATUS, &status);
+   if (status == GL_FALSE)
+   {
+      GLint length;
+      glGetProgramiv(programObject, GL_INFO_LOG_LENGTH, &length);
+      string info(length, ' ');
+      glGetProgramInfoLog(programObject, info.length(), &length, &info[0]);
+      cout << "ERROR linking shader program:" << endl;
+      cout << info << endl;
+   }
 
-	return programObject;
+   return programObject;
 }

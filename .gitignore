@@ -42,6 +42,7 @@ middleware/
 *.sln.docstates
 
 *.sdf
+*.opensdf
 *.sln
 *vcxproj*
 *.ilk
@@ -59,9 +60,11 @@ middleware/
 *.tmp
 *.tmp_proj
 *.log
+*.tlog
 *.vspscc
 *.vssscc
 .builds
 *.pidb
+*.idb
 *.svclog
 *.scc
