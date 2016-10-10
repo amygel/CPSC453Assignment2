@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <string>
 #include <iterator>
+#include <vector>
 
 // specify that we want the OpenGL core profile before including GLFW headers
 #ifdef _WIN32
@@ -161,28 +162,73 @@ struct MyGeometry
    {}
 };
 
-// create buffers and fill with geometry data, returning true if successful
-bool InitializeGeometry(MyGeometry *geometry)
+void createImageWithAspectRatio(MyTexture& texture, vector<GLfloat>& vertices, vector<GLfloat>& textures)
 {
-   // three vertex positions and associated colours of a triangle
-   const GLfloat vertices[][2] = {
-      { -.6f, -.4f },
-      { .0f, .6f },
-      { .6f, -.4f }
-   };
+   if (texture.width > texture.height)
+   {
+      GLfloat ratio = static_cast<GLfloat>(texture.height) / static_cast<GLfloat>(texture.width);
 
+      vertices.push_back(-1.0f);
+      vertices.push_back(-1.0f * ratio);
+      vertices.push_back(-1.0f);
+      vertices.push_back(1.0f * ratio);
+      vertices.push_back(1.0f);
+      vertices.push_back(1.0f * ratio);
+      vertices.push_back(1.0f);
+      vertices.push_back(1.0f * ratio);
+      vertices.push_back(1.0f);
+      vertices.push_back(-1.0f *ratio);
+      vertices.push_back(-1.0f);
+      vertices.push_back(-1.0f * ratio);
+   }
+   else
+   {
+      GLfloat ratio = static_cast<GLfloat>(texture.width) / static_cast<GLfloat>(texture.height);
+
+      vertices.push_back(-1.0f * ratio);
+      vertices.push_back(-1.0f);
+      vertices.push_back(-1.0f * ratio);
+      vertices.push_back(1.0f);
+      vertices.push_back(1.0f * ratio);
+      vertices.push_back(1.0f);
+      vertices.push_back(1.0f * ratio);
+      vertices.push_back(1.0f);
+      vertices.push_back(1.0f * ratio);
+      vertices.push_back(-1.0f);
+      vertices.push_back(-1.0f * ratio);
+      vertices.push_back(-1.0f);
+   }
+
+   textures.push_back(0.0f);
+   textures.push_back(0.0f);
+   textures.push_back(0.0f);
+   textures.push_back(static_cast<GLfloat>(texture.height));
+   textures.push_back(static_cast<GLfloat>(texture.width));
+   textures.push_back(static_cast<GLfloat>(texture.height));
+   textures.push_back(static_cast<GLfloat>(texture.width));
+   textures.push_back(static_cast<GLfloat>(texture.height));
+   textures.push_back(static_cast<GLfloat>(texture.width));
+   textures.push_back(0.0f);
+   textures.push_back(0.0f);
+   textures.push_back(0.0f);
+}
+
+// create buffers and fill with geometry data, returning true if successful
+bool InitializeGeometry(MyGeometry *geometry, MyTexture* texture)
+{
+   // three vertex positions and associated textures of a triangle
    const GLfloat colours[][3] = {
       { 1.0f, 0.0f, 0.0f },
       { 0.0f, 1.0f, 0.0f },
       { 0.0f, 0.0f, 1.0f }
    };
 
-   const GLfloat textures[][2] = {
-      { 0.0f, 0.0f },
-      { 256.0f, 512.0f },
-      { 512.0f, 0.0f }
-   };
-   geometry->elementCount = 3;
+   vector<GLfloat> vertices;
+   vector<GLfloat> textures;
+
+   createImageWithAspectRatio(*texture, vertices, textures);
+
+   geometry->elementCount = vertices.size() / 2;
 
    // these vertex attribute indices correspond to those specified for the
    // input variables in the vertex shader
@@ -193,12 +239,12 @@ bool InitializeGeometry(MyGeometry *geometry)
    // create an array buffer object for storing our vertices
    glGenBuffers(1, &geometry->vertexBuffer);
    glBindBuffer(GL_ARRAY_BUFFER, geometry->vertexBuffer);
-   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
 
    // create an array buffer object for storing our textures
    glGenBuffers(1, &geometry->textureBuffer);
    glBindBuffer(GL_ARRAY_BUFFER, geometry->textureBuffer);
-   glBufferData(GL_ARRAY_BUFFER, sizeof(textures), textures, GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, textures.size()*sizeof(GLfloat), textures.data(), GL_STATIC_DRAW);
 
    // create another one for storing our colours
    glGenBuffers(1, &geometry->colourBuffer);
@@ -331,14 +377,14 @@ int main(int argc, char *argv[])
       return -1;
    }
 
+   MyTexture texture;
+   if (!InitializeTexture(&texture, "images/image6-edc2016.jpg", GL_TEXTURE_RECTANGLE))
+      cout << "Program failed to initialize texture!" << endl;
+
    // call function to create and fill buffers with geometry data
    MyGeometry geometry;
-   if (!InitializeGeometry(&geometry))
+   if (!InitializeGeometry(&geometry, &texture))
       cout << "Program failed to initialize geometry!" << endl;
-
-   MyTexture texture;
-   if (!InitializeTexture(&texture, "images/image1-mandrill.png", GL_TEXTURE_RECTANGLE))
-      cout << "Program failed to initialize texture!" << endl;
 
    // run an event-triggered main loop
    while (!glfwWindowShouldClose(window))
