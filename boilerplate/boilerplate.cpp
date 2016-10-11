@@ -46,16 +46,15 @@ GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
 enum ColourEffect {
    REGULAR = 0,
+   SEPIA,
    GREYSCALE1,
    GREYSCALE2,
    GREYSCALE3,
-   SEPIA
-
 };
 
 static int currImageNum_ = 0;
 static string currImageFileName_ = "images/image1-mandrill.png";
-static vector<int> colourEffects;
+static vector<int> colourEffects_;
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
@@ -376,7 +375,11 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
    }
    else if (key == GLFW_KEY_C && action == GLFW_PRESS)
    {
-      colourEffects[currImageNum_] = (colourEffects[currImageNum_] + 1) % 5;
+      colourEffects_[currImageNum_] = (colourEffects_[currImageNum_] + 1) % 5;
+   }
+   else if (key == GLFW_KEY_F && action == GLFW_PRESS)
+   {
+
    }
 }
 
@@ -430,12 +433,12 @@ int main(int argc, char *argv[])
    MyGeometry geometry;
 
    // Set each images colour effect to 
-   colourEffects.push_back(REGULAR);
-   colourEffects.push_back(REGULAR);
-   colourEffects.push_back(REGULAR);
-   colourEffects.push_back(REGULAR);
-   colourEffects.push_back(REGULAR);
-   colourEffects.push_back(REGULAR);
+   colourEffects_.push_back(REGULAR);
+   colourEffects_.push_back(REGULAR);
+   colourEffects_.push_back(REGULAR);
+   colourEffects_.push_back(REGULAR);
+   colourEffects_.push_back(REGULAR);
+   colourEffects_.push_back(REGULAR);
 
    glUseProgram(shader.program);
    GLuint colourEffectUniform = glGetUniformLocation(shader.program, "colourEffect");
@@ -451,7 +454,7 @@ int main(int argc, char *argv[])
          cout << "Program failed to initialize geometry!" << endl;
 
       glUseProgram(shader.program);
-      glUniform1i(colourEffectUniform, colourEffects.at(currImageNum_));
+      glUniform1i(colourEffectUniform, colourEffects_.at(currImageNum_));
 
       // call function to draw our scene
       RenderScene(&geometry, &texture, &shader); //render scene with texture
