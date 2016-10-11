@@ -45,16 +45,24 @@ GLuint CompileShader(GLenum shaderType, const string &source);
 GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
 enum ColourEffect {
-   REGULAR = 0,
+   NO_EFFECT = 0,
    SEPIA,
    GREYSCALE1,
    GREYSCALE2,
    GREYSCALE3,
 };
 
+enum Filters {
+	NO_FILTER = 0,
+	VSOBEL,
+	HSOBEL,
+	UNSHARP,
+};
+
 static int currImageNum_ = 0;
 static string currImageFileName_ = "images/image1-mandrill.png";
 static vector<int> colourEffects_;
+static vector<int> filters_;
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
@@ -76,7 +84,7 @@ bool InitializeShaders(MyShader *shader)
 {
    // load shader source from files
    string vertexSource = LoadSource("vertex.glsl");
-   string fragmentSource = LoadSource("fragment.glsl");
+   string fragmentSource = LoadSource("filterFragment.glsl");
    if (vertexSource.empty() || fragmentSource.empty()) return false;
 
    // compile shader source into shader objects
@@ -379,7 +387,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
    }
    else if (key == GLFW_KEY_F && action == GLFW_PRESS)
    {
-
+	   filters_[currImageNum_] = (filters_[currImageNum_] + 1) % 4;
    }
 }
 
@@ -401,7 +409,7 @@ int main(int argc, char *argv[])
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-   window = glfwCreateWindow(512, 512, "CPSC 453 OpenGL Boilerplate", 0, 0);
+   window = glfwCreateWindow(512, 512, "CPSC 453 OpenGL Assignment 2", 0, 0);
    if (!window) {
       cout << "Program failed to create GLFW window, TERMINATING" << endl;
       glfwTerminate();
@@ -432,16 +440,16 @@ int main(int argc, char *argv[])
    MyTexture texture;
    MyGeometry geometry;
 
-   // Set each images colour effect to 
-   colourEffects_.push_back(REGULAR);
-   colourEffects_.push_back(REGULAR);
-   colourEffects_.push_back(REGULAR);
-   colourEffects_.push_back(REGULAR);
-   colourEffects_.push_back(REGULAR);
-   colourEffects_.push_back(REGULAR);
+   // Set each images colour and filter effect to regular
+   for (int i = 0; i < 6; i++)
+   {
+	   colourEffects_.push_back(NO_EFFECT);
+	   filters_.push_back(NO_FILTER);
+   }
 
    glUseProgram(shader.program);
    GLuint colourEffectUniform = glGetUniformLocation(shader.program, "colourEffect");
+   GLuint filterUniform = glGetUniformLocation(shader.program, "filter");
 
    // run an event-triggered main loop
    while (!glfwWindowShouldClose(window))
@@ -454,7 +462,8 @@ int main(int argc, char *argv[])
          cout << "Program failed to initialize geometry!" << endl;
 
       glUseProgram(shader.program);
-      glUniform1i(colourEffectUniform, colourEffects_.at(currImageNum_));
+	  glUniform1i(colourEffectUniform, colourEffects_.at(currImageNum_));
+	  glUniform1i(filterUniform, filters_.at(currImageNum_));
 
       // call function to draw our scene
       RenderScene(&geometry, &texture, &shader); //render scene with texture
