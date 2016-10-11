@@ -44,8 +44,18 @@ string LoadSource(const string &filename);
 GLuint CompileShader(GLenum shaderType, const string &source);
 GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
+enum ColourEffect {
+   REGULAR = 0,
+   GREYSCALE1,
+   GREYSCALE2,
+   GREYSCALE3,
+   SEPIA
+
+};
+
 static int currImageNum_ = 0;
 static string currImageFileName_ = "images/image1-mandrill.png";
+static vector<int> colourEffects;
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
@@ -327,16 +337,6 @@ void ErrorCallback(int error, const char* description)
    cout << description << endl;
 }
 
-int increaseCountWithinRange(int counter, int range)
-{
-   counter++;
-   if (counter == range)
-   {
-      counter = 0;
-   }
-   return counter;
-}
-
 int decreaseCountWithinRange(int counter, int maxValue)
 {
    counter--;
@@ -409,12 +409,16 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
    else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
    {
       moveToNextImage();
-      currImageNum_ =increaseCountWithinRange(currImageNum_, 6);
+      currImageNum_ = (currImageNum_ + 1) % 6;
    }
    else if (key == GLFW_KEY_LEFT  && action == GLFW_PRESS)
    {
       moveToPreviousImage();
-      currImageNum_ =decreaseCountWithinRange(currImageNum_, 5);
+      currImageNum_ = decreaseCountWithinRange(currImageNum_, 5);
+   }
+   else if (key == GLFW_KEY_C && action == GLFW_PRESS)
+   {
+      colourEffects[currImageNum_] = (colourEffects[currImageNum_] + 1) % 5;
    }
 }
 
@@ -467,6 +471,17 @@ int main(int argc, char *argv[])
    MyTexture texture;
    MyGeometry geometry;
 
+   // Set each images colour effect to 
+   colourEffects.push_back(REGULAR);
+   colourEffects.push_back(REGULAR);
+   colourEffects.push_back(REGULAR);
+   colourEffects.push_back(REGULAR);
+   colourEffects.push_back(REGULAR);
+   colourEffects.push_back(REGULAR);
+
+   glUseProgram(shader.program);
+   GLuint colourEffectUniform = glGetUniformLocation(shader.program, "colourEffect");
+
    // run an event-triggered main loop
    while (!glfwWindowShouldClose(window))
    {
@@ -476,6 +491,9 @@ int main(int argc, char *argv[])
       // call function to create and fill buffers with geometry data
       if (!InitializeGeometry(&geometry, &texture))
          cout << "Program failed to initialize geometry!" << endl;
+
+      glUseProgram(shader.program);
+      glUniform1i(colourEffectUniform, colourEffects.at(currImageNum_));
 
       // call function to draw our scene
       RenderScene(&geometry, &texture, &shader); //render scene with texture
