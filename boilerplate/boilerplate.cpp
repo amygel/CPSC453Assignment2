@@ -337,68 +337,6 @@ void ErrorCallback(int error, const char* description)
    cout << description << endl;
 }
 
-int decreaseCountWithinRange(int counter, int maxValue)
-{
-   counter--;
-   if (counter == -1)
-   {
-      counter = maxValue;
-   }
-   return counter;
-}
-
-void moveToNextImage()
-{
-   switch (currImageNum_)
-   {
-   case 0:
-      currImageFileName_ = "images/image2-uclogo.png";
-      break;
-   case 1:
-      currImageFileName_ = "images/image3-aerial.jpg";
-      break;
-   case 2:
-      currImageFileName_ = "images/image4-thirsk.jpg";
-      break;
-   case 3:
-      currImageFileName_ = "images/image5-pattern.png";
-      break;
-   case 4:
-      currImageFileName_ = "images/image6-edc2016.jpg";
-      break;
-   case 5:
-   default:
-      currImageFileName_ = "images/image1-mandrill.png";
-      break;
-   };
-}
-
-void moveToPreviousImage()
-{
-   switch (currImageNum_)
-   {
-   case 0:
-      currImageFileName_ = "images/image6-edc2016.jpg";
-      break;
-   case 1:
-   default:
-      currImageFileName_ = "images/image1-mandrill.png";
-      break;
-   case 2:
-      currImageFileName_ = "images/image2-uclogo.png";
-      break;
-   case 3:
-      currImageFileName_ = "images/image3-aerial.jpg";
-      break;
-   case 4:
-      currImageFileName_ = "images/image4-thirsk.jpg";
-      break;
-   case 5:
-      currImageFileName_ = "images/image5-pattern.png";
-      break;
-   };
-}
-
 // handles keyboard input events
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -406,15 +344,35 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
    {
       glfwSetWindowShouldClose(window, GL_TRUE);
    }
-   else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+   else if (key == GLFW_KEY_1 && action == GLFW_PRESS)
    {
-      moveToNextImage();
-      currImageNum_ = (currImageNum_ + 1) % 6;
+      currImageNum_ = 0;
+      currImageFileName_ = "images/image1-mandrill.png";
    }
-   else if (key == GLFW_KEY_LEFT  && action == GLFW_PRESS)
+   else if (key == GLFW_KEY_2  && action == GLFW_PRESS)
    {
-      moveToPreviousImage();
-      currImageNum_ = decreaseCountWithinRange(currImageNum_, 5);
+      currImageNum_ = 1;
+      currImageFileName_ = "images/image2-uclogo.png";
+   }
+   else if (key == GLFW_KEY_3  && action == GLFW_PRESS)
+   {
+      currImageNum_ = 2;
+      currImageFileName_ = "images/image3-aerial.jpg";
+   }
+   else if (key == GLFW_KEY_4  && action == GLFW_PRESS)
+   {
+      currImageNum_ = 3;
+      currImageFileName_ = "images/image4-thirsk.jpg";
+   }
+   else if (key == GLFW_KEY_5  && action == GLFW_PRESS)
+   {
+      currImageNum_ = 4;
+      currImageFileName_ = "images/image5-pattern.png";
+   }
+   else if (key == GLFW_KEY_6  && action == GLFW_PRESS)
+   {
+      currImageNum_ = 5;
+      currImageFileName_ = "images/image6-edc2016.jpg";
    }
    else if (key == GLFW_KEY_C && action == GLFW_PRESS)
    {
