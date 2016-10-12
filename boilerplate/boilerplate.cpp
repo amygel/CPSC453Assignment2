@@ -397,6 +397,24 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
    }
 }
 
+// handles mouse input events
+void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+{
+
+}
+
+// handles cursor position events
+void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+{
+
+}
+
+// handles scroll events
+void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+
+}
+
 // ==========================================================================
 // PROGRAM ENTRY POINT
 
@@ -424,6 +442,9 @@ int main(int argc, char *argv[])
 
    // set keyboard callback function and make our context current (active)
    glfwSetKeyCallback(window, KeyCallback);
+   glfwSetMouseButtonCallback(window, MouseButtonCallback);
+   glfwSetCursorPosCallback(window, CursorPosCallback);
+   glfwSetScrollCallback(window, ScrollCallback);
    glfwMakeContextCurrent(window);
 
    //Initialize GLAD

@@ -19,7 +19,7 @@ uniform int blur;
 
 // constant values
 const float PI = 3.14159265;
-const vec2 texOffset = vec2(1.0, 1.0);
+const vec2 texOffset = vec2(1.5, 1.5);
 
 void main(void)
 {
