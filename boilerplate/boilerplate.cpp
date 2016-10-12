@@ -44,25 +44,19 @@ string LoadSource(const string &filename);
 GLuint CompileShader(GLenum shaderType, const string &source);
 GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
-enum ColourEffect {
+enum Effect {
    NO_EFFECT = 0,
-   SEPIA,
-   GREYSCALE1,
-   GREYSCALE2,
-   GREYSCALE3,
-};
-
-enum Filters {
-	NO_FILTER = 0,
-	VSOBEL,
-	HSOBEL,
-	UNSHARP,
+   EFFECT1,
+   EFFECT2,
+   EFFECT3,
+   EFFECT4,
 };
 
 static int currImageNum_ = 0;
 static string currImageFileName_ = "images/image1-mandrill.png";
-static vector<int> colourEffects_;
-static vector<int> filters_;
+static vector<Effect> colourEffects_;
+static vector<Effect> filters_;
+static vector<Effect> blurs_;
 static bool shaderChanged_ = true;
 static string currShaderFileName_ = "colourFragment.glsl";
 
@@ -287,7 +281,7 @@ bool InitializeGeometry(MyGeometry *geometry, MyTexture* texture)
    glVertexAttribPointer(TEXTURE_INDEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
    glEnableVertexAttribArray(TEXTURE_INDEX);
 
-   // assocaite the colour array with the vertex array object
+   // associate the colour array with the vertex array object
    glBindBuffer(GL_ARRAY_BUFFER, geometry->colourBuffer);
    glVertexAttribPointer(COLOUR_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
    glEnableVertexAttribArray(COLOUR_INDEX);
@@ -387,13 +381,19 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
    {
       shaderChanged_ = true;
       currShaderFileName_ = "colourFragment.glsl";
-      colourEffects_[currImageNum_] = (colourEffects_[currImageNum_] + 1) % 5;
+      colourEffects_[currImageNum_] = static_cast<Effect>((colourEffects_[currImageNum_] + 1) % 5);
    }
    else if (key == GLFW_KEY_F && action == GLFW_PRESS)
    {
       shaderChanged_ = true;
       currShaderFileName_ = "filterFragment.glsl";
-	   filters_[currImageNum_] = (filters_[currImageNum_] + 1) % 4;
+      filters_[currImageNum_] = static_cast<Effect>((filters_[currImageNum_] + 1) % 4);
+   }
+   else if (key == GLFW_KEY_B && action == GLFW_PRESS)
+   {
+      shaderChanged_ = true;
+      currShaderFileName_ = "blurFragment.glsl";
+      blurs_[currImageNum_] = static_cast<Effect>((blurs_[currImageNum_] + 1) % 4);
    }
 }
 
@@ -445,7 +445,8 @@ int main(int argc, char *argv[])
    for (int i = 0; i < 6; i++)
    {
 	   colourEffects_.push_back(NO_EFFECT);
-	   filters_.push_back(NO_FILTER);
+      filters_.push_back(NO_EFFECT);
+      blurs_.push_back(NO_EFFECT);
    }
 
    // Variable to check if image has changed
@@ -480,8 +481,10 @@ int main(int argc, char *argv[])
       glUseProgram(shader.program);
       GLuint colourEffectUniform = glGetUniformLocation(shader.program, "colourEffect");
       GLuint filterUniform = glGetUniformLocation(shader.program, "filter");
+      GLuint blurUniform = glGetUniformLocation(shader.program, "blur");
 	   glUniform1i(colourEffectUniform, colourEffects_.at(currImageNum_));
-	   glUniform1i(filterUniform, filters_.at(currImageNum_));
+      glUniform1i(filterUniform, filters_.at(currImageNum_));
+      glUniform1i(blurUniform, blurs_.at(currImageNum_));
 
       // call function to draw our scene
       RenderScene(&geometry, &texture, &shader); //render scene with texture

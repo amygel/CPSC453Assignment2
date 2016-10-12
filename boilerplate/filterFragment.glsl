@@ -64,7 +64,7 @@ void main(void)
     }
 
 	// Calculate the convolution values for the mask
-    float dp3 = dot(F[0], I[0]) + dot(F[1], I[1]) + dot(F[2], I[2]);
+    float dotprod = dot(F[0], I[0]) + dot(F[1], I[1]) + dot(F[2], I[2]);
 
-	FragmentColour = vec4(0.5 * sqrt(dp3 * dp3));
+	FragmentColour = vec4(0.5 * sqrt(dotprod * dotprod));
 }

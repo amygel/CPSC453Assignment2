@@ -27,6 +27,7 @@ void main(void)
 {
 	vec4 texColour = texture(tex, textureCoords);
 
+	// Don't bother doing the calculations if not colouring
 	if(colourEffect == 0)
 	{
 		FragmentColour = texColour;
