@@ -7,21 +7,7 @@
 #version 410
 
 // interpolated colour received from vertex stage
-in vec3 Colour;
 in vec2 textureCoords;
-
-mat3 hSobel = {
-	{ -1.0, -2.0, -1.0},
-	{ 0.0, 0.0, 0.0},
-	{ 1.0, 2.0, 1.0 }};
-mat3 vSobel = {
-	{ 1.0, 0.0, -1.0},
-	{ 2.0, 0.0, -2.0},
-	{ 1.0, 0.0, -1.0 }};
-mat3 unsharp = {
-	{ 0.0, -1.0, 0.0},
-	{ -1.0, 5.0, -1.0},
-	{ 0.0, -1.0, 0.0 }};
 
 // first output is mapped to the framebuffer's colour index by default
 out vec4 FragmentColour;
@@ -32,8 +18,10 @@ uniform int filter;
 
 void main(void)
 {
+	// Get texture
 	vec4 texColour = texture(tex, textureCoords);
 
+	// Don't bother doing the calculations if not filtering
 	if(filter == 0)
 	{
 		FragmentColour = texColour;
@@ -43,24 +31,34 @@ void main(void)
 	mat3 I;
 	mat3 F;
 
+	// Fill matrix with selected filter
 	if(filter == 1)
 	{
-		F = vSobel;
+		// vertical sobel
+		F[0]=vec3(1.0, 0.0, -1.0);
+		F[1]=vec3(2.0, 0.0, -2.0);
+		F[2]=vec3(1.0, 0.0, -1.0);
 	}
 	else if(filter == 2)
 	{
-		F = hSobel;
+	    // horizontal sobel
+		F[0]=vec3(-1.0, -2.0, -1.0);
+		F[1]=vec3(0.0, 0.0, 0.0);
+		F[2]=vec3(1.0, 2.0, 1.0);
 	}
 	else if(filter == 3)
 	{
-		F = unsharp;
+		// unsharp mask
+		F[0]=vec3(0.0, -1.0, 0.0);
+		F[1]=vec3(-1.0, 5.0, -1.0);
+		F[2]=vec3(0.0, -1.0, 0.0 );
 	}
 
 	// Create matrix with surrounding textures
-	for (int i=0; i<3; i++)
+	for (int i=0, k=2; i<3; i++, k--)
     {
         for (int j=0; j<3; j++) {
-            vec4 smt = texture( tex, ivec2(textureCoords) + ivec2(i-1,j-1));
+            vec4 smt = texture( tex, ivec2(textureCoords) + ivec2(j-1,k-1));
             I[i][j] = length(smt.rgb); 
         }
     }
@@ -68,5 +66,5 @@ void main(void)
 	// Calculate the convolution values for the mask
     float dp3 = dot(F[0], I[0]) + dot(F[1], I[1]) + dot(F[2], I[2]);
 
-	FragmentColour = vec4(0.5 * sqrt(dp3 * dp3 * dp3 * dp3));
+	FragmentColour = vec4(0.5 * sqrt(dp3 * dp3));
 }

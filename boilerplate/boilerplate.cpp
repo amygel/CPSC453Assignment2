@@ -63,6 +63,8 @@ static int currImageNum_ = 0;
 static string currImageFileName_ = "images/image1-mandrill.png";
 static vector<int> colourEffects_;
 static vector<int> filters_;
+static bool shaderChanged_ = true;
+static string currShaderFileName_ = "colourFragment.glsl";
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
@@ -80,11 +82,11 @@ struct MyShader
 };
 
 // load, compile, and link shaders, returning true if successful
-bool InitializeShaders(MyShader *shader)
+bool InitializeShaders(MyShader *shader, string shaderName)
 {
    // load shader source from files
    string vertexSource = LoadSource("vertex.glsl");
-   string fragmentSource = LoadSource("filterFragment.glsl");
+   string fragmentSource = LoadSource(shaderName);
    if (vertexSource.empty() || fragmentSource.empty()) return false;
 
    // compile shader source into shader objects
@@ -383,10 +385,14 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
    }
    else if (key == GLFW_KEY_C && action == GLFW_PRESS)
    {
+      shaderChanged_ = true;
+      currShaderFileName_ = "colourFragment.glsl";
       colourEffects_[currImageNum_] = (colourEffects_[currImageNum_] + 1) % 5;
    }
    else if (key == GLFW_KEY_F && action == GLFW_PRESS)
    {
+      shaderChanged_ = true;
+      currShaderFileName_ = "filterFragment.glsl";
 	   filters_[currImageNum_] = (filters_[currImageNum_] + 1) % 4;
    }
 }
@@ -420,7 +426,7 @@ int main(int argc, char *argv[])
    glfwSetKeyCallback(window, KeyCallback);
    glfwMakeContextCurrent(window);
 
-   //Intialize GLAD
+   //Initialize GLAD
    if (!gladLoadGL())
    {
       cout << "GLAD init failed" << endl;
@@ -432,11 +438,6 @@ int main(int argc, char *argv[])
 
    // call function to load and compile shader programs
    MyShader shader;
-   if (!InitializeShaders(&shader)) {
-      cout << "Program could not initialize shaders, TERMINATING" << endl;
-      return -1;
-   }
-
    MyTexture texture;
    MyGeometry geometry;
 
@@ -447,23 +448,40 @@ int main(int argc, char *argv[])
 	   filters_.push_back(NO_FILTER);
    }
 
-   glUseProgram(shader.program);
-   GLuint colourEffectUniform = glGetUniformLocation(shader.program, "colourEffect");
-   GLuint filterUniform = glGetUniformLocation(shader.program, "filter");
+   // Variable to check if image has changed
+   int prevImage = -1;
 
    // run an event-triggered main loop
    while (!glfwWindowShouldClose(window))
    {
-      if (!InitializeTexture(&texture, currImageFileName_.c_str(), GL_TEXTURE_RECTANGLE))
-         cout << "Program failed to initialize texture!" << endl;
+      // reset
+      DestroyGeometry(&geometry);
+
+      if (shaderChanged_)
+      {
+         shaderChanged_ = false;
+         if (!InitializeShaders(&shader, currShaderFileName_)) {
+            cout << "Program could not initialize shaders, TERMINATING" << endl;
+            return -1;
+         }
+      }
+
+      if (currImageNum_ != prevImage)
+      {
+         if (!InitializeTexture(&texture, currImageFileName_.c_str(), GL_TEXTURE_RECTANGLE))
+            cout << "Program failed to initialize texture!" << endl;
+         prevImage = currImageNum_;
+      }
 
       // call function to create and fill buffers with geometry data
       if (!InitializeGeometry(&geometry, &texture))
          cout << "Program failed to initialize geometry!" << endl;
 
       glUseProgram(shader.program);
-	  glUniform1i(colourEffectUniform, colourEffects_.at(currImageNum_));
-	  glUniform1i(filterUniform, filters_.at(currImageNum_));
+      GLuint colourEffectUniform = glGetUniformLocation(shader.program, "colourEffect");
+      GLuint filterUniform = glGetUniformLocation(shader.program, "filter");
+	   glUniform1i(colourEffectUniform, colourEffects_.at(currImageNum_));
+	   glUniform1i(filterUniform, filters_.at(currImageNum_));
 
       // call function to draw our scene
       RenderScene(&geometry, &texture, &shader); //render scene with texture
