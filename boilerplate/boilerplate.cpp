@@ -54,11 +54,11 @@ enum Effect {
 
 static int currImageNum_ = 0;
 static string currImageFileName_ = "images/image1-mandrill.png";
+static string currShaderFileName_ = "colourFragment.glsl";
 static vector<Effect> colourEffects_;
 static vector<Effect> filters_;
 static vector<Effect> blurs_;
 static bool shaderChanged_ = true;
-static string currShaderFileName_ = "colourFragment.glsl";
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
@@ -404,13 +404,13 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 }
 
 // handles cursor position events
-void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+void CursorPosCallback(GLFWwindow* window, double xPos, double yPos)
 {
 
 }
 
 // handles scroll events
-void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 {
 
 }
@@ -440,7 +440,7 @@ int main(int argc, char *argv[])
       return -1;
    }
 
-   // set keyboard callback function and make our context current (active)
+   // set keyboard & mouse callback functions and make our context current (active)
    glfwSetKeyCallback(window, KeyCallback);
    glfwSetMouseButtonCallback(window, MouseButtonCallback);
    glfwSetCursorPosCallback(window, CursorPosCallback);
