@@ -23,15 +23,17 @@ void main()
 {
 	vec2 newCoords;
 
-	//newCoords[0] = VertexPosition.x * cos(angle) - VertexPosition.y * sin(angle);
-	//newCoords[1] = VertexPosition.y * cos(angle) + VertexPosition.x * sin(angle);
+	// Rotate the coordinates
+	newCoords[0] = VertexPosition.x * cos(angle) - VertexPosition.y * sin(angle);
+	newCoords[1] = VertexPosition.y * cos(angle) + VertexPosition.x * sin(angle);
 
-	newCoords = VertexPosition + offset;
+	// Translate the coordinates
+	newCoords += offset;
 
     // assign modified vertex position
     gl_Position = vec4(newCoords, 0.0, 1.0);
-    textureCoords = VertexTexture;
 
-    // assign output colour to be interpolated
+    // assign output colour/ texture to be interpolated
+	textureCoords = VertexTexture;
     Colour = VertexColour;
 }

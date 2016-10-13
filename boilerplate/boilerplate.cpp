@@ -72,7 +72,6 @@ static vector<float> zoomLevels_;
 static double prevCoords_[2];
 static bool shaderChanged_ = true;
 static bool isDragging_ = false;
-static bool isRotating_ = false;
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
@@ -215,7 +214,7 @@ void createImageWithAspectRatio(MyTexture& texture, vector<GLfloat>& vertices, v
       vertices.push_back(-1.0f);
       vertices.push_back(-1.0f * ratio);
 
-      zoomHeight *= ratio;
+	  zoomHeight *= ratio;
    }
    else
    {
@@ -235,7 +234,7 @@ void createImageWithAspectRatio(MyTexture& texture, vector<GLfloat>& vertices, v
       vertices.push_back(-1.0f * ratio);
       vertices.push_back(-1.0f);
 
-      zoomWidth *= ratio;
+	  zoomWidth *= ratio;
    }
 
    // Declare min/max to avoid zooming farther than picture
@@ -427,20 +426,19 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
       currShaderFileName_ = "blurFragment.glsl";
       blurs_[currImageNum_] = static_cast<Effect>((blurs_[currImageNum_] + 1) % 4);
    }
+   else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+   {
+	   angles_[currImageNum_] -= M_PI / 8;
+   }
+   else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+   {
+	   angles_[currImageNum_] += M_PI / 8;
+   }
 }
 
 // handles mouse input events
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-   if (mods == GLFW_MOD_SHIFT)
-   {
-      isRotating_ = true;
-   }
-   else
-   {
-      isRotating_ = false;
-   }
-
    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
    {
       isDragging_ = true;
@@ -454,14 +452,7 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 // handles cursor position events
 void CursorPosCallback(GLFWwindow* window, double xPos, double yPos)
 {
-   if (isDragging_ && isRotating_)
-   {
-      // Get difference between previous cursor position and current cursor position
-      float prevAngle = cos(prevCoords_[1] / prevCoords_[0]);
-      float currAngle = cos(yPos / xPos);
-      angles_[currImageNum_] = prevAngle - currAngle;
-   }
-   else if (isDragging_)
+   if (isDragging_)
    {
       // Amount mouse has moved, normalized
       offsets_[currImageNum_][0] = (xPos - prevCoords_[0]) / 512.0;
