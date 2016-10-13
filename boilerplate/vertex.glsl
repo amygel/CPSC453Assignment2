@@ -16,10 +16,18 @@ layout(location = 2) in vec2 VertexTexture;
 out vec3 Colour;
 out vec2 textureCoords;
 
+uniform float angle;
+uniform vec2 offset;
+
 void main()
 {
-    // assign vertex position without modification
-    gl_Position = vec4(VertexPosition, 0.0, 1.0);
+	//float newX = VertexPosition.x * cos(angle) - VertexPosition.y * sin(angle);
+	//float newY = VertexPosition.y * cos(angle) + VertexPosition.x * sin(angle);
+
+	vec2 newCoords = VertexPosition + offset;
+
+    // assign modified vertex position
+    gl_Position = vec4(newCoords, 0.0, 1.0);
     textureCoords = VertexTexture;
 
     // assign output colour to be interpolated

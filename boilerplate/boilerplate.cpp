@@ -17,6 +17,9 @@
 #include <iterator>
 #include <vector>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 // specify that we want the OpenGL core profile before including GLFW headers
 #ifdef _WIN32
 #include <glad/glad.h>
@@ -52,13 +55,23 @@ enum Effect {
    EFFECT4,
 };
 
+// Current image state variables
 static int currImageNum_ = 0;
 static string currImageFileName_ = "images/image1-mandrill.png";
 static string currShaderFileName_ = "colourFragment.glsl";
+
+// State per image
 static vector<Effect> colourEffects_;
 static vector<Effect> filters_;
 static vector<Effect> blurs_;
+static vector<float> angles_;
+static vector<vector<float>> offsets_;
+
+// Current global state variables
+static double prevCoords_[2];
 static bool shaderChanged_ = true;
+static bool isDragging_ = false;
+static bool isRotating_ = false;
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
@@ -400,13 +413,47 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 // handles mouse input events
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
+   if (mods == GLFW_MOD_SHIFT)
+   {
+      isRotating_ = true;
+   }
+   else
+   {
+      isRotating_ = false;
+   }
 
+   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+   {
+      isDragging_ = true;
+   }
+   else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+   {
+      isDragging_ = false;
+   }
 }
 
 // handles cursor position events
 void CursorPosCallback(GLFWwindow* window, double xPos, double yPos)
 {
-
+   if (isDragging_ && isRotating_)
+   {
+      // Get difference between previous cursor position and current cursor position
+      float prevAngle = cos(prevCoords_[1] / prevCoords_[0]);
+      float currAngle = cos(yPos / xPos);
+      angles_[currImageNum_] = prevAngle - currAngle;
+   }
+   else if (isDragging_)
+   {
+      // Amount mouse has moved, normalized
+      offsets_[currImageNum_][0] = (xPos - prevCoords_[0]) / 512.0;
+      offsets_[currImageNum_][1] = (yPos - prevCoords_[1]) / -512.0;
+   }
+   else
+   {
+      // Update previous cursor position
+      prevCoords_[0] = xPos;
+      prevCoords_[1] = yPos;
+   }
 }
 
 // handles scroll events
@@ -462,12 +509,18 @@ int main(int argc, char *argv[])
    MyTexture texture;
    MyGeometry geometry;
 
-   // Set each images colour and filter effect to regular
+   // Initialize each images state variables
    for (int i = 0; i < 6; i++)
    {
 	   colourEffects_.push_back(NO_EFFECT);
       filters_.push_back(NO_EFFECT);
       blurs_.push_back(NO_EFFECT);
+      angles_.push_back(0.0);
+
+      vector<float> defaultOffset;
+      defaultOffset.push_back(0.0); //x
+      defaultOffset.push_back(0.0); //y
+      offsets_.push_back(defaultOffset);
    }
 
    // Variable to check if image has changed
@@ -490,9 +543,9 @@ int main(int argc, char *argv[])
 
       if (currImageNum_ != prevImage)
       {
+         prevImage = currImageNum_;
          if (!InitializeTexture(&texture, currImageFileName_.c_str(), GL_TEXTURE_RECTANGLE))
             cout << "Program failed to initialize texture!" << endl;
-         prevImage = currImageNum_;
       }
 
       // call function to create and fill buffers with geometry data
@@ -503,9 +556,13 @@ int main(int argc, char *argv[])
       GLuint colourEffectUniform = glGetUniformLocation(shader.program, "colourEffect");
       GLuint filterUniform = glGetUniformLocation(shader.program, "filter");
       GLuint blurUniform = glGetUniformLocation(shader.program, "blur");
+      GLuint angleUniform = glGetUniformLocation(shader.program, "angle");
+      GLuint offsetUniform = glGetUniformLocation(shader.program, "offset");
 	   glUniform1i(colourEffectUniform, colourEffects_.at(currImageNum_));
       glUniform1i(filterUniform, filters_.at(currImageNum_));
       glUniform1i(blurUniform, blurs_.at(currImageNum_));
+      glUniform1f(angleUniform, angles_.at(currImageNum_));
+      glUniform2f(offsetUniform, offsets_.at(currImageNum_).at(0), offsets_.at(currImageNum_).at(1));
 
       // call function to draw our scene
       RenderScene(&geometry, &texture, &shader); //render scene with texture
