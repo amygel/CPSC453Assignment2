@@ -66,6 +66,7 @@ static vector<Effect> filters_;
 static vector<Effect> blurs_;
 static vector<float> angles_;
 static vector<vector<float>> offsets_;
+static vector<float> zoomLevels_;
 
 // Current global state variables
 static double prevCoords_[2];
@@ -193,10 +194,14 @@ struct MyGeometry
 
 void createImageWithAspectRatio(MyTexture& texture, vector<GLfloat>& vertices, vector<GLfloat>& textures)
 {
+   GLfloat zoomHeight = zoomLevels_[currImageNum_];
+   GLfloat zoomWidth = zoomLevels_[currImageNum_];
+
    if (texture.width > texture.height)
    {
       GLfloat ratio = static_cast<GLfloat>(texture.height) / static_cast<GLfloat>(texture.width);
 
+      // Initialize two triangles with the aspect ratio
       vertices.push_back(-1.0f);
       vertices.push_back(-1.0f * ratio);
       vertices.push_back(-1.0f);
@@ -209,11 +214,14 @@ void createImageWithAspectRatio(MyTexture& texture, vector<GLfloat>& vertices, v
       vertices.push_back(-1.0f *ratio);
       vertices.push_back(-1.0f);
       vertices.push_back(-1.0f * ratio);
+
+      zoomHeight *= ratio;
    }
    else
    {
       GLfloat ratio = static_cast<GLfloat>(texture.width) / static_cast<GLfloat>(texture.height);
 
+      // Initialize two triangles with the aspect ratio
       vertices.push_back(-1.0f * ratio);
       vertices.push_back(-1.0f);
       vertices.push_back(-1.0f * ratio);
@@ -226,20 +234,31 @@ void createImageWithAspectRatio(MyTexture& texture, vector<GLfloat>& vertices, v
       vertices.push_back(-1.0f);
       vertices.push_back(-1.0f * ratio);
       vertices.push_back(-1.0f);
+
+      zoomWidth *= ratio;
    }
 
-   textures.push_back(0.0f);
-   textures.push_back(0.0f);
-   textures.push_back(0.0f);
-   textures.push_back(static_cast<GLfloat>(texture.height));
-   textures.push_back(static_cast<GLfloat>(texture.width));
-   textures.push_back(static_cast<GLfloat>(texture.height));
-   textures.push_back(static_cast<GLfloat>(texture.width));
-   textures.push_back(static_cast<GLfloat>(texture.height));
-   textures.push_back(static_cast<GLfloat>(texture.width));
-   textures.push_back(0.0f);
-   textures.push_back(0.0f);
-   textures.push_back(0.0f);
+   // Declare min/max to avoid zooming farther than picture
+   zoomHeight = min(zoomHeight, static_cast<GLfloat>(texture.height) / 2);
+   zoomWidth = min(zoomWidth, static_cast<GLfloat>(texture.width) / 2);
+   GLfloat height = min(static_cast<GLfloat>(texture.height) - zoomHeight, static_cast<GLfloat>(texture.height));
+   GLfloat width = min(static_cast<GLfloat>(texture.width) - zoomWidth, static_cast<GLfloat>(texture.width));
+   GLfloat originHeight = max(0.0f + zoomHeight, 0.0);
+   GLfloat originWidth = max(0.0f + zoomWidth, 0.0);
+
+   // Map texture coordinates to the geometry coordinates
+   textures.push_back(originWidth);
+   textures.push_back(originHeight);
+   textures.push_back(originWidth);
+   textures.push_back(height);
+   textures.push_back(width);
+   textures.push_back(height);
+   textures.push_back(width);
+   textures.push_back(height);
+   textures.push_back(width);
+   textures.push_back(originHeight);
+   textures.push_back(originWidth);
+   textures.push_back(originHeight);
 }
 
 // create buffers and fill with geometry data, returning true if successful
@@ -459,7 +478,14 @@ void CursorPosCallback(GLFWwindow* window, double xPos, double yPos)
 // handles scroll events
 void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 {
-
+   if (yOffset > 0)
+   {
+      zoomLevels_[currImageNum_] += 4;
+   }
+   else
+   {
+      zoomLevels_[currImageNum_] -= 4;
+   }
 }
 
 // ==========================================================================
@@ -516,6 +542,7 @@ int main(int argc, char *argv[])
       filters_.push_back(NO_EFFECT);
       blurs_.push_back(NO_EFFECT);
       angles_.push_back(0.0);
+      zoomLevels_.push_back(0.0);
 
       vector<float> defaultOffset;
       defaultOffset.push_back(0.0); //x

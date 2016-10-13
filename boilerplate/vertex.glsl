@@ -21,10 +21,12 @@ uniform vec2 offset;
 
 void main()
 {
-	//float newX = VertexPosition.x * cos(angle) - VertexPosition.y * sin(angle);
-	//float newY = VertexPosition.y * cos(angle) + VertexPosition.x * sin(angle);
+	vec2 newCoords;
 
-	vec2 newCoords = VertexPosition + offset;
+	//newCoords[0] = VertexPosition.x * cos(angle) - VertexPosition.y * sin(angle);
+	//newCoords[1] = VertexPosition.y * cos(angle) + VertexPosition.x * sin(angle);
+
+	newCoords = VertexPosition + offset;
 
     // assign modified vertex position
     gl_Position = vec4(newCoords, 0.0, 1.0);
