@@ -24,8 +24,8 @@ void main()
 	vec2 newCoords;
 
 	// Rotate the coordinates
-	newCoords[0] = VertexPosition.x * cos(angle) - VertexPosition.y * sin(angle);
-	newCoords[1] = VertexPosition.y * cos(angle) + VertexPosition.x * sin(angle);
+	newCoords.x = VertexPosition.x * cos(angle) - VertexPosition.y * sin(angle);
+	newCoords.y = VertexPosition.y * cos(angle) + VertexPosition.x * sin(angle);
 
 	// Translate the coordinates
 	newCoords += offset;
