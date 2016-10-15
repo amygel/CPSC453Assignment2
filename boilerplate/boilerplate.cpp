@@ -64,14 +64,14 @@ static string currShaderFileName_ = "colourFragment.glsl";
 static vector<Effect> colourEffects_;
 static vector<Effect> filters_;
 static vector<Effect> blurs_;
-static vector<float> angles_;
-static vector<vector<float>> offsets_;
-static vector<float> zoomLevels_;
 
 // Current global state variables
 static double prevCoords_[2];
 static bool shaderChanged_ = true;
 static bool isDragging_ = false;
+
+// Vertices
+static vector<GLfloat> vertices;
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
@@ -191,49 +191,35 @@ struct MyGeometry
    {}
 };
 
-void createImageWithAspectRatio(MyTexture& texture, vector<GLfloat>& vertices, vector<GLfloat>& textures)
+void createImageWithAspectRatio(MyTexture& texture)
 {
-	GLfloat height = zoomLevels_[currImageNum_];
-	GLfloat width = zoomLevels_[currImageNum_];
+   GLfloat height = 1.0;
+   GLfloat width = 1.0;
 
    if (texture.width > texture.height)
    {
       GLfloat ratio = static_cast<GLfloat>(texture.height) / static_cast<GLfloat>(texture.width);
-	  height *= ratio;
+      height *= ratio;
    }
    else
    {
       GLfloat ratio = static_cast<GLfloat>(texture.width) / static_cast<GLfloat>(texture.height);
-	  width *= ratio;
+      width *= ratio;
    }
 
    // Initialize two triangles with the aspect ratio
-   vertices.push_back(-1.0f * width);
-   vertices.push_back(-1.0f * height);
-   vertices.push_back(-1.0f * width);
-   vertices.push_back(1.0f * height);
-   vertices.push_back(1.0f * width);
-   vertices.push_back(1.0f * height);
-   vertices.push_back(1.0f * width);
-   vertices.push_back(1.0f * height);
-   vertices.push_back(1.0f * width);
-   vertices.push_back(-1.0f * height);
-   vertices.push_back(-1.0f * width);
-   vertices.push_back(-1.0f * height);
-
-   // Map texture coordinates to the geometry coordinates
-   textures.push_back(0.0f);
-   textures.push_back(0.0f);
-   textures.push_back(0.0f);
-   textures.push_back(static_cast<GLfloat>(texture.height));
-   textures.push_back(static_cast<GLfloat>(texture.width));
-   textures.push_back(static_cast<GLfloat>(texture.height));
-   textures.push_back(static_cast<GLfloat>(texture.width));
-   textures.push_back(static_cast<GLfloat>(texture.height));
-   textures.push_back(static_cast<GLfloat>(texture.width));
-   textures.push_back(0.0f);
-   textures.push_back(0.0f);
-   textures.push_back(0.0f);
+   vertices[0] = (-1.0f * width);
+   vertices[1] = (-1.0f * height);
+   vertices[2] = (-1.0f * width);
+   vertices[3] = (1.0f * height);
+   vertices[4] = (1.0f * width);
+   vertices[5] = (1.0f * height);
+   vertices[6] = (1.0f * width);
+   vertices[7] = (1.0f * height);
+   vertices[8] = (1.0f * width);
+   vertices[9] = (-1.0f * height);
+   vertices[10] = (-1.0f * width);
+   vertices[11] = (-1.0f * height);
 }
 
 // create buffers and fill with geometry data, returning true if successful
@@ -246,10 +232,20 @@ bool InitializeGeometry(MyGeometry *geometry, MyTexture* texture)
       { 0.0f, 0.0f, 1.0f }
    };
 
-   vector<GLfloat> vertices;
+   // Map texture coordinates to the geometry coordinates
    vector<GLfloat> textures;
-
-   createImageWithAspectRatio(*texture, vertices, textures);
+   textures.push_back(0.0f);
+   textures.push_back(0.0f);
+   textures.push_back(0.0f);
+   textures.push_back(static_cast<GLfloat>(texture->height));
+   textures.push_back(static_cast<GLfloat>(texture->width));
+   textures.push_back(static_cast<GLfloat>(texture->height));
+   textures.push_back(static_cast<GLfloat>(texture->width));
+   textures.push_back(static_cast<GLfloat>(texture->height));
+   textures.push_back(static_cast<GLfloat>(texture->width));
+   textures.push_back(0.0f);
+   textures.push_back(0.0f);
+   textures.push_back(0.0f);
 
    geometry->elementCount = vertices.size() / 2;
 
@@ -404,11 +400,29 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
    }
    else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
    {
-	   angles_[currImageNum_] -= M_PI / 8;
+      GLfloat angle  = static_cast<GLfloat>(M_PI / -8);
+
+      // Apply rotation matrix to each points x & y
+      for (unsigned int i = 0; i < vertices.size(); i += 2)
+      {
+         float x = vertices[i] * cos(angle) - vertices[i + 1] * sin(angle);
+         float y = vertices[i + 1] * cos(angle) + vertices[i] * sin(angle);
+         vertices[i] = x;
+         vertices[i + 1] = y;
+      }
    }
    else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
    {
-	   angles_[currImageNum_] += M_PI / 8;
+      GLfloat angle = static_cast<GLfloat>(M_PI / 8);
+
+      // Apply rotation matrix to each points x & y
+      for (unsigned int i = 0; i < vertices.size(); i += 2)
+      {
+         float x = vertices[i] * cos(angle) - vertices[i + 1] * sin(angle);
+         float y = vertices[i + 1] * cos(angle) + vertices[i] * sin(angle);
+         vertices[i] = x;
+         vertices[i + 1] = y;
+      }
    }
 }
 
@@ -418,6 +432,12 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
    {
       isDragging_ = true;
+
+      // Update previous cursor position
+      double xPos, yPos;
+      glfwGetCursorPos(window, &xPos, &yPos);
+      prevCoords_[0] = xPos;
+      prevCoords_[1] = yPos;
    }
    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
    {
@@ -431,37 +451,33 @@ void CursorPosCallback(GLFWwindow* window, double xPos, double yPos)
    if (isDragging_)
    {
       // Amount mouse has moved, normalized
-      offsets_[currImageNum_][0] = (xPos - prevCoords_[0]) / 512.0;
-      offsets_[currImageNum_][1] = (yPos - prevCoords_[1]) / -512.0;
+      for (unsigned int i = 0; i < vertices.size(); i += 2)
+      {
+         vertices[i] += static_cast<GLfloat>(2 * (xPos - prevCoords_[0]) / 512);
+         vertices[i + 1] -= static_cast<GLfloat>(2 * (yPos - prevCoords_[1]) / 512);
+      }
    }
-   else
-   {
-      // Update previous cursor position
-      prevCoords_[0] = xPos;
-      prevCoords_[1] = yPos;
-   }
+
+   prevCoords_[0] = xPos;
+   prevCoords_[1] = yPos;
 }
 
 // handles scroll events
 void ScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 {
-   if (yOffset > 0)
+   // Don't zoom if dragging
+   if (isDragging_)
    {
-	   GLfloat zoom = zoomLevels_[currImageNum_] + 0.1f;
-	   if (zoom > 20.0)
-	   {
-		   zoom = 20.0;
-	   }
-      zoomLevels_[currImageNum_] = zoom;
+      return;
    }
-   else
+
+   float zoom = 100.0f;
+   zoom += static_cast<GLfloat>(yOffset*2);
+
+   for (unsigned int i = 0; i < vertices.size(); i += 2)
    {
-	   GLfloat zoom = zoomLevels_[currImageNum_] - 0.1f;
-	   if (zoom < 0.0)
-	   {
-		   zoom = 0.0;
-	   }
-      zoomLevels_[currImageNum_] = zoom;
+      vertices[i] = vertices[i] * zoom / 100.0f;
+      vertices[i + 1] = vertices[i + 1] * zoom / 100.0f;
    }
 }
 
@@ -515,16 +531,11 @@ int main(int argc, char *argv[])
    // Initialize each images state variables
    for (int i = 0; i < 6; i++)
    {
-	   colourEffects_.push_back(NO_EFFECT);
+      colourEffects_.push_back(NO_EFFECT);
       filters_.push_back(NO_EFFECT);
       blurs_.push_back(NO_EFFECT);
-      angles_.push_back(0.0);
-      zoomLevels_.push_back(1.0);
-
-      vector<float> defaultOffset;
-      defaultOffset.push_back(0.0); //x
-      defaultOffset.push_back(0.0); //y
-      offsets_.push_back(defaultOffset);
+      vertices.push_back(0.0); //x
+      vertices.push_back(0.0); //y
    }
 
    // Variable to check if image has changed
@@ -550,6 +561,7 @@ int main(int argc, char *argv[])
          prevImage = currImageNum_;
          if (!InitializeTexture(&texture, currImageFileName_.c_str(), GL_TEXTURE_RECTANGLE))
             cout << "Program failed to initialize texture!" << endl;
+         createImageWithAspectRatio(texture);
       }
 
       // call function to create and fill buffers with geometry data
@@ -560,13 +572,9 @@ int main(int argc, char *argv[])
       GLuint colourEffectUniform = glGetUniformLocation(shader.program, "colourEffect");
       GLuint filterUniform = glGetUniformLocation(shader.program, "filter");
       GLuint blurUniform = glGetUniformLocation(shader.program, "blur");
-      GLuint angleUniform = glGetUniformLocation(shader.program, "angle");
-      GLuint offsetUniform = glGetUniformLocation(shader.program, "offset");
-	   glUniform1i(colourEffectUniform, colourEffects_.at(currImageNum_));
+      glUniform1i(colourEffectUniform, colourEffects_.at(currImageNum_));
       glUniform1i(filterUniform, filters_.at(currImageNum_));
       glUniform1i(blurUniform, blurs_.at(currImageNum_));
-      glUniform1f(angleUniform, angles_.at(currImageNum_));
-      glUniform2f(offsetUniform, offsets_.at(currImageNum_).at(0), offsets_.at(currImageNum_).at(1));
 
       // call function to draw our scene
       RenderScene(&geometry, &texture, &shader); //render scene with texture
